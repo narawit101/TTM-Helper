@@ -22,6 +22,18 @@ type UserRecord = {
   deviceLimit: number;
 };
 
+type DeviceRecord = {
+  id: string;
+  userId: string;
+  deviceKey: string;
+  deviceName: string | null;
+  createdAt: Date;
+};
+
+type UserWithDevicesRecord = UserRecord & {
+  devices: DeviceRecord[];
+};
+
 type AppPrismaClient = PrismaClient & {
   admin: {
     findUnique: (args: { where: { email: string } }) => Promise<AdminRecord | null>;
@@ -33,12 +45,21 @@ type AppPrismaClient = PrismaClient & {
     }) => Promise<AdminRecord>;
   };
   user: {
+    findUnique: (args: {
+      where: { email: string };
+      include?: { devices?: boolean };
+    }) => Promise<UserWithDevicesRecord | UserRecord | null>;
     findMany: (args: { orderBy: { createdAt: "asc" | "desc" } }) => Promise<UserRecord[]>;
     upsert: (args: {
       where: { email: string };
       update: Partial<Pick<UserRecord, "expiresAt" | "deviceLimit">>;
       create: Pick<UserRecord, "email" | "expiresAt" | "deviceLimit">;
     }) => Promise<UserRecord>;
+  };
+  device: {
+    create: (args: {
+      data: Pick<DeviceRecord, "userId" | "deviceKey" | "deviceName">;
+    }) => Promise<DeviceRecord>;
   };
 };
 

@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Account has expired" }, { status: 403 });
     }
 
-    const existingDevice = user.devices.find(d => d.deviceKey === deviceKey);
+    const existingDevice = user.devices.find((d: { deviceKey: string }) => d.deviceKey === deviceKey);
     let activeDevicesCount = user.devices.length;
 
     if (!existingDevice) {
