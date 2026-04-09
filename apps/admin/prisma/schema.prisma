@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String    @id @default(cuid()) @db.Text
+  email       String    @unique @db.Text
+  createdAt   DateTime  @default(now()) @db.Timestamp(3)
+  expiresAt   DateTime? @db.Timestamp(3)
+  deviceLimit Int       @default(1)
+  devices     Device[]
+
+  @@map("User")
+}
+
+model Device {
+  id        String   @id @default(cuid()) @db.Text
+  userId    String   @db.Text
+  deviceKey String   @unique @db.Text
+  deviceName String? @db.Text
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("Device")
+}
+
+model Admin {
+  id        String   @id @default(cuid()) @db.Text
+  email     String   @unique @db.Text
+  password  String   @db.Text
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+
+  @@map("Admin")
+}

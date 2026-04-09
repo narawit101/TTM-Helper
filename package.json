@@ -1,0 +1,15 @@
+{
+  "name": "ticket-helper-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter admin --filter extension dev",
+    "build": "pnpm --filter admin build && pnpm --filter extension build",
+    "lint": "pnpm --filter admin lint && pnpm --filter extension lint",
+    "typecheck": "pnpm --filter admin typecheck && pnpm --filter extension typecheck",
+    "prisma:generate": "pnpm --filter admin prisma:generate",
+    "prisma:migrate": "pnpm --filter admin prisma:migrate",
+    "prisma:seed": "pnpm --filter admin prisma:seed"
+  }
+}
