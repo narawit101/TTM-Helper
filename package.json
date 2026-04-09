@@ -8,8 +8,14 @@
     "build": "pnpm --filter admin build && pnpm --filter extension build",
     "lint": "pnpm --filter admin lint && pnpm --filter extension lint",
     "typecheck": "pnpm --filter admin typecheck && pnpm --filter extension typecheck",
+    "env:local": "pnpm --filter admin env:local",
+    "env:prod": "pnpm --filter admin env:prod",
     "prisma:generate": "pnpm --filter admin prisma:generate",
     "prisma:migrate": "pnpm --filter admin prisma:migrate",
+    "prisma:migrate:deploy": "pnpm --filter admin prisma:migrate:deploy",
     "prisma:seed": "pnpm --filter admin prisma:seed"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.3"
   }
 }

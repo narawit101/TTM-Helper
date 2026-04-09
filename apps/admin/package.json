@@ -8,8 +8,11 @@
     "start": "next start",
     "lint": "tsc --noEmit -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "env:local": "powershell -Command \"Copy-Item .env.development .env -Force; Copy-Item .env.development .env.local -Force\"",
+    "env:prod": "powershell -Command \"Copy-Item .env.production .env -Force; Copy-Item .env.production .env.local -Force\"",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts"
   },
