@@ -6,7 +6,6 @@ import { CreateUserForm } from "@/components/dashboard/create-user-form";
 import { SearchAndFilter } from "@/components/dashboard/search-and-filter";
 import { Pagination } from "@/components/shared/pagination";
 import { UserTable } from "@/components/dashboard/user-table";
-import { Prisma } from "@prisma/client";
 import { User } from "@/types/user";
 
 function TableSkeleton() {
@@ -31,7 +30,11 @@ async function UserTableData({ searchParams }: { searchParams?: { q?: string; st
   const currentPage = Number(searchParams?.page) || 1;
   const pageSize = 10;
 
-  const whereCondition: Prisma.UserWhereInput = {};
+  const whereCondition: {
+    OR?: Array<{ email?: { contains: string; mode: "insensitive" }; expiresAt?: null | { gt?: Date; lte?: Date } }>;
+    expiresAt?: { lte?: Date; gt?: Date };
+    deviceLimit?: number;
+  } = {};
 
   if (q) {
     whereCondition.OR = [
