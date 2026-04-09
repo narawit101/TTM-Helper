@@ -14,8 +14,5 @@
     "prisma:migrate": "pnpm --filter admin prisma:migrate",
     "prisma:migrate:deploy": "pnpm --filter admin prisma:migrate:deploy",
     "prisma:seed": "pnpm --filter admin prisma:seed"
-  },
-  "devDependencies": {
-    "prisma": "^6.19.3"
   }
 }
