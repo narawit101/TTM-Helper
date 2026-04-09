@@ -18,7 +18,9 @@ export async function GET(request: Request) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
-        const { redis } = await import("@/lib/redis");
+        const { getRedis } = await import("@/lib/redis");
+        const redis = getRedis();
+        await redis.connect().catch(() => null);
         const cacheKey = `user:me:${payload.sub}`;
 
         let user = null;

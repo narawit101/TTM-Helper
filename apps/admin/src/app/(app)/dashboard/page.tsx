@@ -81,7 +81,9 @@ async function UserTableData({ searchParams }: { searchParams?: { q?: string; st
   let totalUsers = 0;
   let users: User[] = [];
 
-  const { redis } = await import("@/lib/redis");
+  const { getRedis } = await import("@/lib/redis");
+  const redis = getRedis();
+  await redis.connect().catch(() => null);
   const cachedData = await redis.get(cacheKey).catch(() => null);
 
   if (cachedData) {
