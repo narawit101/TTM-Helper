@@ -12,7 +12,17 @@ function createRedis() {
     throw new Error("REDIS_URL is not set");
   }
 
-  return new Redis(url, {
+  const parsed = new URL(url);
+  const port = parsed.port ? Number(parsed.port) : undefined;
+  const db = parsed.pathname && parsed.pathname !== "/" ? Number(parsed.pathname.slice(1)) : undefined;
+
+  return new Redis({
+    host: parsed.hostname,
+    port: Number.isFinite(port) ? port : undefined,
+    username: parsed.username || undefined,
+    password: parsed.password || undefined,
+    db: Number.isFinite(db) ? db : undefined,
+    tls: parsed.protocol === "rediss:" ? {} : undefined,
     lazyConnect: true,
     maxRetriesPerRequest: 1,
     enableOfflineQueue: false
