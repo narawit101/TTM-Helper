@@ -3,7 +3,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard",
+  title: "Admin Nongkapi TTM Helper Dashboard",
   description: "Next.js admin dashboard with Prisma and PostgreSQL"
 };
 

@@ -9,7 +9,17 @@ export const manifest = defineManifest({
   permissions: ["storage", "tabs", "scripting", "activeTab", "sidePanel"],
   host_permissions: ["https://booking.thaiticketmajor.com/*"],
   action: {
-    default_title: "Ticket Helper"
+    default_title: "Ticket Helper",
+    default_icon: {
+      "16": "logo.png",
+      "48": "logo.png",
+      "128": "logo.png"
+    }
+  },
+  icons: {
+    "16": "logo.png",
+    "48": "logo.png",
+    "128": "logo.png"
   },
   side_panel: {
     default_path: "src/sidepanel/index.html"

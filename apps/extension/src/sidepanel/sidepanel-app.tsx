@@ -652,7 +652,7 @@ export function SidePanelApp() {
       <header className="bg-[#1c1c1f] px-2 py-2 rounded-t-xl shadow-sm text-white flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-600 bg-white flex items-center justify-center">
-            <svg className="w-8 h-8 text-brand-red" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div className="text-xs ">
             <div className="font-extrabold text-sm text-white leading-tight">{APP_CONFIG.extendtionName} <span className="text-brand-red text-[12px] ml-1 font-normal">V{APP_CONFIG.displayVersion}</span></div>
