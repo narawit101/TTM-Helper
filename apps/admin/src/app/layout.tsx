@@ -4,7 +4,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Admin Nongkapi TTM Helper Dashboard",
-  description: "Next.js admin dashboard with Prisma and PostgreSQL"
+  description: "Next.js admin dashboard with Prisma and PostgreSQL",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico"
+  }
 };
 
 export default function RootLayout({
