@@ -212,6 +212,7 @@ export function SidePanelApp() {
   const [draftReady, setDraftReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [blockedAccount, setBlockedAccount] = useState<{ email: string; reason: string; at: number } | null>(null);
   const debugLogRef = useRef<HTMLDivElement | null>(null);
   const [activeSection, setActiveSection] = useState<SectionKey | null>(null);
 
@@ -242,7 +243,7 @@ export function SidePanelApp() {
           setRefreshToken(storedRefreshToken);
           setUser(storedUser);
         } catch {
-          // request() handles 401/403 internally by clearing storage
+          await storage.clearSession();
           setToken(null);
           setRefreshToken(null);
           setUser(null);
@@ -280,8 +281,24 @@ export function SidePanelApp() {
         running?: boolean;
         error?: string;
         result?: { detail?: string; step?: string; logs?: string[] };
+        reason?: string;
       };
     }) => {
+      if (message?.type === "SESSION_LOGGED_OUT") {
+        void storage.clearSession();
+        setToken(null);
+        setRefreshToken(null);
+        setUser(null);
+        setIsRunning(false);
+        setMessage(message.payload?.reason ?? "ระบบออกจากระบบอัตโนมัติแล้ว");
+        setDebugLogs((current) =>
+          appendLogEntries(current, [
+            `[STOP] ${message.payload?.reason ?? "ระบบออกจากระบบอัตโนมัติแล้ว"}`
+          ])
+        );
+        return;
+      }
+
       if (message?.type !== "TTM_RUN_STATUS") {
         return;
       }

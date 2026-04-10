@@ -29,6 +29,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "User not found" }, { status: 401 });
     }
 
+    // กันคนโดนแบน (Max Devices = 0) ล็อกอินเข้ามาใหม่ แม้บนอุปกรณ์เดิม
+    if (user.deviceLimit === 0) {
+      return NextResponse.json({ message: "บัญชีของคุณถูกระงับการใช้งาน" }, { status: 403 });
+    }
+
     if (user.expiresAt && user.expiresAt < new Date()) {
       return NextResponse.json({ message: "Account has expired" }, { status: 403 });
     }

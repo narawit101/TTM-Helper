@@ -1,48 +1,24 @@
 import { storage } from "@/shared/storage";
-import { extensionApi } from "@/shared/api";
 import {
   detectTtmPageState,
   runTtmPreset,
-  resetTtmSession,
+  resetTtmSession
 } from "./ttm-engine";
 import { TtmPresetMessage, TtmRunReport } from "@/types";
 
 const ACTIVE_RUN_KEY = "__ttm_active_run__";
+const PAGE_ALERT_EVENT = "__ttm_helper_page_alert__";
+const ACCOUNT_BLOCKED_MESSAGE = "บัญชีของคุณไม่สามารถใช้งานได้ในขณะนี้";
 
 let activePreset: TtmPresetMessage | null = null;
 let loopTimer: ReturnType<typeof setTimeout> | null = null;
 let running = false;
-let lastAuthCheckTime = 0;
-const AUTH_CHECK_INTERVAL_MS = 180000; // เช็คทุกๆ 3 นาทีในลูป
+let pageAlertListenerInstalled = false;
 
 function clearLoop() {
   if (loopTimer) {
     clearTimeout(loopTimer);
     loopTimer = null;
-  }
-}
-
-async function verifyUserStatusSafe() {
-  const now = Date.now();
-  if (now - lastAuthCheckTime < AUTH_CHECK_INTERVAL_MS) {
-    return true; // ยังไม่ถึงรอบเช็ค
-  }
-
-  lastAuthCheckTime = now;
-  try {
-    const token = await storage.getToken();
-    if (!token) return false;
-
-    // เรียกใช้ API ข้าม domain ไม่ได้โดยตรงใน content script 
-    // วิธีที่ชัวร์และรองรับ CORS คือพึ่ง Background หรือแค่ดึง token มาดูว่าหมดอายุไหม
-    // ในที่นี้ส่งไปให้ background ยิง API แทน
-    const response = await new Promise((resolve) => {
-      chrome.runtime.sendMessage({ type: "CHECK_AUTH_STATUS" }, resolve);
-    });
-
-    return !!(response && (response as any).ok);
-  } catch {
-    return false;
   }
 }
 
@@ -53,6 +29,72 @@ async function getStoredRun() {
 
 async function clearStoredRun() {
   await chrome.storage.local.remove(ACTIVE_RUN_KEY);
+}
+
+function injectPageAlertBridge() {
+  if (document.documentElement.dataset.ttmHelperAlertBridge === "true") {
+    return;
+  }
+
+  const script = document.createElement("script");
+  script.textContent = `
+    (() => {
+      if (window.__ttmHelperAlertBridgeInstalled) return;
+      window.__ttmHelperAlertBridgeInstalled = true;
+      const originalAlert = window.alert.bind(window);
+      window.alert = function(message) {
+        try {
+          window.dispatchEvent(new CustomEvent("${PAGE_ALERT_EVENT}", {
+            detail: String(message ?? "")
+          }));
+        } catch {}
+        return originalAlert(message);
+      };
+    })();
+  `;
+
+  (document.head ?? document.documentElement).appendChild(script);
+  script.remove();
+  document.documentElement.dataset.ttmHelperAlertBridge = "true";
+}
+
+async function stopRunLocally() {
+  clearLoop();
+  running = false;
+  activePreset = null;
+  await clearStoredRun();
+  resetTtmSession();
+}
+
+async function forceLogoutAndStop(detail: string) {
+  await stopRunLocally();
+
+  try {
+    await chrome.runtime.sendMessage({
+      type: "FORCE_LOGOUT_AND_STOP",
+      detail
+    });
+  } catch {
+    // Ignore runtime disconnects during refresh or page unload.
+  }
+}
+
+function installPageAlertListener() {
+  if (pageAlertListenerInstalled) {
+    return;
+  }
+
+  window.addEventListener(PAGE_ALERT_EVENT, (event: Event) => {
+    const message = event instanceof CustomEvent ? String(event.detail ?? "") : "";
+
+    if (!message.includes(ACCOUNT_BLOCKED_MESSAGE)) {
+      return;
+    }
+
+    void forceLogoutAndStop(`${ACCOUNT_BLOCKED_MESSAGE} || ${message}`);
+  });
+
+  pageAlertListenerInstalled = true;
 }
 
 async function broadcastResult(result: TtmRunReport, isRunning: boolean) {
@@ -139,18 +181,6 @@ async function executeRunCycle(reason: string) {
     return null;
   }
 
-  // 1) เพิ่มตรวจสอบสิทธิ์ใน Heartbeat Loop กันสาย Bypass
-  const isAuthValid = await verifyUserStatusSafe();
-  if (!isAuthValid) {
-    running = false;
-    activePreset = null;
-    clearLoop();
-    await clearStoredRun();
-    alert("❌ บัญชีของคุณหมดอายุ ถูกจำกัดจำนวนอุปกรณ์ หรือถูกระงับการใช้งาน");
-    window.location.reload();
-    return { stopped: true, action: "auth-failed" } as unknown as TtmRunReport;
-  }
-
   running = true;
   const result = runTtmPreset(activePreset);
   await broadcastResult(result, !result.stopped);
@@ -172,6 +202,9 @@ async function executeRunCycle(reason: string) {
 }
 
 async function bootstrapFromStorage() {
+  injectPageAlertBridge();
+  installPageAlertListener();
+
   const storedRun = await getStoredRun();
 
   if (!storedRun?.preset || !window.location.href.startsWith("https://booking.thaiticketmajor.com/")) {
@@ -196,10 +229,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message?.type === "STOP_TTM_RUN") {
     void (async () => {
-      clearLoop();
-      running = false;
-      activePreset = null;
-      await clearStoredRun();
+      await stopRunLocally();
       sendResponse({ ok: true });
     })();
     return true;
@@ -207,13 +237,16 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message?.type === "RUN_PRESET") {
     void (async () => {
-      // 2) บังคับเช็ค "ก่อนกดเริ่ม" อีกรอบ (กัน user bypass ไม่เปิด panel)
+      injectPageAlertBridge();
+      installPageAlertListener();
+
       const isAuthValid = await new Promise((resolve) => {
         chrome.runtime.sendMessage({ type: "CHECK_AUTH_STATUS" }, resolve);
       });
 
       if (!(isAuthValid as { ok: boolean })?.ok) {
-        alert("⚠️ บัญชีของคุณไม่สามารถใช้งานได้ในขณะนี้");
+        await forceLogoutAndStop(`${ACCOUNT_BLOCKED_MESSAGE} `);
+        alert(ACCOUNT_BLOCKED_MESSAGE);
         sendResponse({ ok: false, error: "Auth failed" });
         return;
       }
@@ -221,8 +254,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       resetTtmSession();
       activePreset = (message.payload ?? null) as TtmPresetMessage | null;
       clearLoop();
-      // เซ็ตเวลาเริ่มต้นให้ไม่ต้องไปเช็คอีกใน 3 นาทีข้างหน้า
-      lastAuthCheckTime = Date.now();
       const result = await executeRunCycle("manual");
       sendResponse({ ok: true, result });
     })();

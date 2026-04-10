@@ -42,6 +42,55 @@ async function clearActiveRun() {
   await chrome.storage.local.remove(ACTIVE_RUN_KEY);
 }
 
+async function forceLogoutAndStop(tabId: number, detail: string) {
+  const refreshToken = await storage.getRefreshToken();
+
+  if (refreshToken) {
+    await extensionApi.logout(refreshToken).catch(() => null);
+  }
+
+  await storage.clearSession();
+  await clearActiveRun();
+  await setActionBadge(tabId, false);
+
+  await broadcastRunStatus({
+    tabId,
+    reason: "forced-logout",
+    running: false,
+    result: {
+      step: "STOP",
+      detail,
+      state: "unknown",
+      stopped: true,
+      logs: ["ระบบออกจากระบบอัตโนมัติ"]
+    }
+  });
+
+  try {
+    await chrome.runtime.sendMessage({
+      type: "SESSION_LOGGED_OUT",
+      payload: {
+        reason: detail
+      }
+    });
+  } catch {
+    // Side panel may be closed.
+  }
+}
+
+async function notifySessionLoggedOut(reason: string) {
+  try {
+    await chrome.runtime.sendMessage({
+      type: "SESSION_LOGGED_OUT",
+      payload: {
+        reason
+      }
+    });
+  } catch {
+    // Side panel may be closed.
+  }
+}
+
 function getContentScriptFiles() {
   return chrome.runtime.getManifest().content_scripts?.[0]?.js ?? [];
 }
@@ -139,6 +188,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         await extensionApi.getCurrentUser(token);
         sendResponse({ ok: true });
       } catch (err) {
+        await storage.clearSession();
+        await notifySessionLoggedOut("เซสชันหมดอายุหรือบัญชีใช้งานไม่ได้ ระบบออกจากระบบแล้ว");
         sendResponse({ ok: false, error: err instanceof Error ? err.message : "Auth failed" });
       }
     })();
@@ -214,6 +265,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ authenticated: true, user: response.user });
       } catch {
         await storage.clearSession();
+        await notifySessionLoggedOut("เซสชันหมดอายุหรือบัญชีใช้งานไม่ได้ ระบบออกจากระบบแล้ว");
         sendResponse({ authenticated: false });
       }
     })();
@@ -240,6 +292,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ ok: true, payload: refreshed });
       } catch {
         await storage.clearSession();
+        await notifySessionLoggedOut("เซสชันหมดอายุหรือบัญชีใช้งานไม่ได้ ระบบออกจากระบบแล้ว");
         sendResponse({ ok: false });
       }
     })();
@@ -308,6 +361,28 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           stopped: true
         }
       });
+
+      sendResponse({ ok: true });
+    })();
+
+    return true;
+  }
+
+  if (message?.type === "FORCE_LOGOUT_AND_STOP") {
+    void (async () => {
+      const tabId = Number(_sender?.tab?.id ?? message.tabId);
+      await forceLogoutAndStop(
+        Number.isFinite(tabId) ? tabId : -1,
+        String(message.detail ?? "บัญชีของคุณไม่สามารถใช้งานได้ในขณะนี้ ระบบออกจากระบบและหยุดบอทแล้ว")
+      );
+
+      if (Number.isFinite(tabId) && tabId > 0) {
+        try {
+          await chrome.tabs.sendMessage(tabId, { type: "STOP_TTM_RUN" });
+        } catch {
+          // Content script may already be unloading.
+        }
+      }
 
       sendResponse({ ok: true });
     })();
