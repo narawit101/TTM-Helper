@@ -114,10 +114,12 @@ export function applyTtmPreset(preset: TtmPresetMessage) {
   const paymentMethod = preset.paymentMethod ?? preset.payment ?? "";
 
   const results = {
-    eventUrl: setInputValue(
-      findContainerByLabel(["ลิงก์คอนเสิร์ต", "concert link"]),
-      eventUrl
-    ),
+    eventUrl: eventUrl
+      ? setInputValue(
+        findContainerByLabel(["ลิงก์คอนเสิร์ต", "concert link"]),
+        eventUrl
+      )
+      : false,
     round: setInputValue(
       findContainerByLabel(["รอบ", "round"]),
       preset.round !== undefined ? String(preset.round) : ""

@@ -162,7 +162,7 @@ function sanitizeConcertUrl(url?: string) {
 function validateDraft(draft: HelperDraft) {
   const sanitizedUrl = sanitizeConcertUrl(draft.url);
 
-  if (!sanitizedUrl) {
+  if (draft.url.trim() && !sanitizedUrl) {
     return { ok: false as const, field: "url", message: "กรุณากรอกลิงก์คอนเสิร์ตที่เป็นหน้า booking ให้ถูกต้อง" };
   }
 
@@ -178,7 +178,7 @@ function validateDraft(draft: HelperDraft) {
     return { ok: false as const, field: "ticket", message: "กรุณากรอกจำนวนบัตรที่ต้องการ" };
   }
 
-  return { ok: true as const, sanitizedUrl };
+  return { ok: true as const, sanitizedUrl: sanitizedUrl || null };
 }
 
 async function reloadTabAndWait(tabId: number) {
@@ -503,6 +503,10 @@ export function SidePanelApp() {
       let targetTabId = tab.id;
 
       if (!isTtmBookingUrl(tab.url)) {
+        if (!validation.sanitizedUrl) {
+          throw new Error("กรุณาเปิดหน้า booking.thaiticketmajor.com หรือใส่ลิงก์คอนเสิร์ตก่อนเริ่มทำงาน");
+        }
+
         const updatedTab = await chrome.tabs.update(tab.id, {
           url: validation.sanitizedUrl
         });
@@ -531,7 +535,7 @@ export function SidePanelApp() {
         tabId: targetTabId,
         payload: {
           ...draft,
-          url: validation.sanitizedUrl
+          url: validation.sanitizedUrl ?? draft.url.trim()
         }
       });
 
