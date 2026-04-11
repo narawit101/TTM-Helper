@@ -240,17 +240,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       injectPageAlertBridge();
       installPageAlertListener();
 
-      const isAuthValid = await new Promise((resolve) => {
-        chrome.runtime.sendMessage({ type: "CHECK_AUTH_STATUS" }, resolve);
-      });
-
-      if (!(isAuthValid as { ok: boolean })?.ok) {
-        await forceLogoutAndStop(`${ACCOUNT_BLOCKED_MESSAGE} `);
-        alert(ACCOUNT_BLOCKED_MESSAGE);
-        sendResponse({ ok: false, error: "Auth failed" });
-        return;
-      }
-
       resetTtmSession();
       activePreset = (message.payload ?? null) as TtmPresetMessage | null;
       clearLoop();
