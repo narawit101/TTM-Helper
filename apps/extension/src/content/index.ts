@@ -119,6 +119,7 @@ function getModeDelays(runMode?: TtmPresetMessage["runMode"]) {
         zoneMissing: 900,
         fallback: 8,
         seat: 12,
+        modalDismissed: Math.floor(Math.random() * (1000 - 500 + 1)) + 500, // 500-1000ms
         details: 25,
         queue: 80,
         default: 15
@@ -129,6 +130,7 @@ function getModeDelays(runMode?: TtmPresetMessage["runMode"]) {
         zoneMissing: 2600,
         fallback: 220,
         seat: 180,
+        modalDismissed: Math.floor(Math.random() * (2000 - 1500 + 1)) + 1500, // 1500-2000ms
         details: 220,
         queue: 700,
         default: 240
@@ -139,6 +141,7 @@ function getModeDelays(runMode?: TtmPresetMessage["runMode"]) {
         zoneMissing: 1800,
         fallback: 50,
         seat: 40,
+        modalDismissed: Math.floor(Math.random() * (1500 - 800 + 1)) + 800, // 800-1500ms
         details: 50,
         queue: 200,
         default: 35
@@ -161,6 +164,8 @@ function getNextDelay(result: TtmRunReport) {
     case "seat-selected":
     case "seat-waiting":
       return delays.seat;
+    case "seat-warning-modal-closed":
+      return delays.modalDismissed;
     case "details-filled":
       return delays.details;
     case "queue-detected":

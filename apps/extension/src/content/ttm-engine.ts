@@ -1444,14 +1444,18 @@ function hasSeatWarningModal() {
       text.includes("seat is not available") ||
       text.includes("ที่นั่งถูกเลือกไปแล้ว") ||
       text.includes("incorrect data") ||
+      text.includes("please select number of seat") ||
+      text.includes("ข้อมูลไม่ถูกต้อง") ||
       text.includes("กรุณาเลือกจำนวนบัตรใหม่อีกครั้ง") ||
-      text.includes("please select number of seat")
+      text.includes("สามารถจองได้สูงสุด 1 ใบต่อครั้ง")
     );
   });
 }
 
 function dismissSeatWarningModal(logs: string[]) {
-  const closeButton = findClickableByTexts(["close", "ปิด", "ตกลง", "ok", "ยอมรับ"]);
+  const closeCandidates = ["close", "ปิด", "ตกลง", "ok", "ยอมรับ", "x"];
+  const closeButton = findClickableByTexts(closeCandidates) || document.querySelector<HTMLElement>(".btn-close, .swal2-close, .ui-dialog-titlebar-close");
+
   if (closeButton && (clickElement(closeButton) || clickAtCenter(closeButton))) {
     logs.push("S4: seat warning modal dismissed");
     return true;
@@ -1720,7 +1724,7 @@ function chooseSeats(preset: TtmPresetMessage, logs: string[]) {
 
     clearMarker(SEAT_MARKER_KEY);
     return {
-      status: "retry" as const,
+      status: "modal-dismissed" as const,
       selected: [] as SeatCandidate[],
       requestedCount,
       strategy,
@@ -1790,7 +1794,7 @@ function chooseSeats(preset: TtmPresetMessage, logs: string[]) {
       }
       clearMarker(SEAT_MARKER_KEY);
       return {
-        status: "retry" as const,
+        status: "modal-dismissed" as const,
         selected: [] as SeatCandidate[],
         requestedCount,
         strategy,
@@ -2088,7 +2092,7 @@ export function runTtmPreset(preset: TtmPresetMessage): TtmRunReport {
               : "A: อยู่หน้าเลือกโซน แต่หาโซนที่ตั้งไว้ไม่เจอ จึงหยุดค้นหาชั่วคราว รอให้ผู้ใช้กดเข้าผังเอง",
         state,
         step: "A",
-        stopped: false,
+        stopped: zoneResult.status === "missing",
         matched: zoneResult.zone,
         logs
       };
@@ -2108,7 +2112,9 @@ export function runTtmPreset(preset: TtmPresetMessage): TtmRunReport {
                 ? "seat-selected"
                 : seatResult.status === "waiting"
                   ? "seat-waiting"
-                  : "seat-failed",
+                  : seatResult.status === "modal-dismissed"
+                    ? "seat-warning-modal-closed"
+                    : "seat-failed",
         detail:
           seatResult.status === "confirmed"
             ? `B: เลือกที่นั่ง ${selectedLabels} แล้ว และกดยืนยันที่นั่งแล้ว`
@@ -2120,7 +2126,7 @@ export function runTtmPreset(preset: TtmPresetMessage): TtmRunReport {
                   : "B: เลือกที่นั่งไว้แล้ว กำลังลองกดยืนยันอีกครั้ง"
                 : seatResult.status === "waiting"
                   ? "B: เพิ่งเลือกที่นั่งไปแล้ว กำลังรอหน้าเปลี่ยน"
-                  : seatResult.status === "retry"
+                  : seatResult.status === "modal-dismissed" || seatResult.status === "retry"
                     ? "B: เว็บยังไม่รับที่นั่ง จึงล้าง modal แล้วจะลองเลือกใหม่"
                     : seatResult.status === "missing-config"
                       ? "B: อยู่หน้าเลือกที่นั่ง แต่ยังไม่ได้ตั้งจำนวนบัตร"
