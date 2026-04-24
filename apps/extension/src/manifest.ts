@@ -6,7 +6,7 @@ export const manifest = defineManifest({
   name: APP_CONFIG.extendtionName,
   version: APP_CONFIG.version,
   description: "ช่วยให้การจองตั๋วผ่านเว็บไซต์ ThaiTicketMajor สะดวกและรวดเร็วยิ่งขึ้น ด้วยฟีเจอร์ที่ออกแบบมาเพื่อเพิ่มประสิทธิภาพในการจองตั๋วของคุณ",
-  permissions: ["storage", "tabs", "scripting", "activeTab", "sidePanel"],
+  permissions: ["storage", "tabs", "scripting", "activeTab", "sidePanel", "alarms"],
   host_permissions: ["https://booking.thaiticketmajor.com/*"],
   action: {
     default_title: "Ticket Helper",

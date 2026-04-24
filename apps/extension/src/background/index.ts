@@ -200,10 +200,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.runtime.onInstalled.addListener(() => {
   console.log("Ticket Helper installed");
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => null);
+  // ตั้ง alarm keepalive ไว้ทุก 20 วิ เพื่อป้องกัน SW หลับ
+  chrome.alarms.create("sw-keepalive", { periodInMinutes: 0.33 });
 });
 
 chrome.runtime.onStartup?.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => null);
+  chrome.alarms.create("sw-keepalive", { periodInMinutes: 0.33 });
+});
+
+// ทุกครั้งที่ SW ตื่นขึ้นมา (จากการ restart) ให้ re-register behavior เสมอ
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => null);
+
+// Keepalive: ทำให้ SW ตื่นทุก ~20 วิ ป้องกันถูก Chrome kill กลางคัน
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "sw-keepalive") {
+    // no-op: แค่ให้ SW ตื่นอยู่ก็พอ
+  }
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {

@@ -593,8 +593,32 @@ export function SidePanelApp() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(223,24,56,0.16),transparent_18rem),linear-gradient(180deg,#fff9fa_0%,#ffffff_100%)] p-4 text-sm text-brand-text">
-        Loading...
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(223,24,56,0.16),transparent_18rem),linear-gradient(180deg,#fff9fa_0%,#ffffff_100%)] flex flex-col items-center justify-center gap-6">
+        {/* Logo with spinning ring */}
+        <div className="relative flex items-center justify-center">
+          {/* Spinning ring */}
+          <svg className="spin-ring absolute" width="96" height="96" viewBox="0 0 96 96" fill="none">
+            <circle cx="48" cy="48" r="44" stroke="#DF1838" strokeWidth="3" strokeLinecap="round"
+              strokeDasharray="60 220" />
+          </svg>
+          {/* Logo */}
+          <div className="pulse-logo w-20 h-20 rounded-full overflow-hidden shadow-lg shadow-brand-red/20">
+            <img src="/logo.png" alt="Nongkapi TTM Helper" className="w-full h-full object-cover" />
+          </div>
+        </div>
+
+        {/* App name */}
+        <div className="text-center space-y-1">
+          <p className="text-[13px] font-bold text-brand-red tracking-wide">{APP_CONFIG.extendtionName}</p>
+          <p className="text-[11px] text-slate-400 font-medium"></p>
+        </div>
+
+        {/* Dots */}
+        <div className="flex items-center gap-1.5">
+          <span className="dot-1 w-1.5 h-1.5 rounded-full bg-brand-red inline-block"></span>
+          <span className="dot-2 w-1.5 h-1.5 rounded-full bg-brand-red inline-block"></span>
+          <span className="dot-3 w-1.5 h-1.5 rounded-full bg-brand-red inline-block"></span>
+        </div>
       </div>
     );
   }
@@ -605,8 +629,8 @@ export function SidePanelApp() {
         <div className="mx-auto w-full max-w-sm rounded-[24px] border border-brand-line bg-white/95 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.06)] backdrop-blur-sm">
 
           <div className="mb-6 flex flex-col items-center justify-center space-y-2">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-red/10 text-brand-red mb-2">
-              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" /></svg>
+            <div className="flex h-20 w-20 items-center justify-center rounded-full overflow-hidden mb-2">
+              <img src="/logo.png" alt="Nongkapi TTM Helper Logo" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-xl font-black text-brand-red text-center tracking-tight">{APP_CONFIG.extendtionName} </h1>
           </div>
