@@ -127,10 +127,22 @@ function clickElement(element: Element | null | undefined) {
 
   dispatchMouseSequence(target, rect.left + rect.width / 2, rect.top + rect.height / 2);
 
-  if ((target as any).click) {
-    try { (target as any).click(); } catch { }
-  } else {
-    target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  const href = target.getAttribute("href");
+  const isJavascriptUrl = href && href.trim().toLowerCase().startsWith("javascript:");
+  if (isJavascriptUrl) {
+    target.removeAttribute("href");
+  }
+
+  try {
+    if ((target as any).click) {
+      try { (target as any).click(); } catch { }
+    } else {
+      target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    }
+  } finally {
+    if (isJavascriptUrl) {
+      target.setAttribute("href", href);
+    }
   }
 
   return true;
@@ -249,7 +261,20 @@ function clickMapArea(area: Element) {
       area.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, cancelable: true, view: window }));
       area.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, view: window }));
       area.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, view: window }));
-      area.click();
+      
+      const href = area.getAttribute("href");
+      const isJavascriptUrl = href && href.trim().toLowerCase().startsWith("javascript:");
+      if (isJavascriptUrl) {
+        area.removeAttribute("href");
+      }
+
+      try {
+        area.click();
+      } finally {
+        if (isJavascriptUrl) {
+          area.setAttribute("href", href);
+        }
+      }
       triggered = true;
     } catch {
       // ignore direct area click failures
@@ -264,7 +289,21 @@ function clickMapArea(area: Element) {
   const pointTarget = document.elementFromPoint(point.x, point.y) ?? point.image;
   dispatchMouseSequence(pointTarget, point.x, point.y);
   if (pointTarget instanceof HTMLElement) {
-    try { pointTarget.click(); } catch { /* ignore */ }
+    try {
+      const href = pointTarget.getAttribute("href");
+      const isJavascriptUrl = href && href.trim().toLowerCase().startsWith("javascript:");
+      if (isJavascriptUrl) {
+        pointTarget.removeAttribute("href");
+      }
+
+      try {
+        pointTarget.click();
+      } finally {
+        if (isJavascriptUrl) {
+          pointTarget.setAttribute("href", href);
+        }
+      }
+    } catch { /* ignore */ }
   }
   return true;
 }
@@ -1167,14 +1206,26 @@ function clickSeatCandidate(seat: SeatCandidate, logs: string[]) {
     dispatchSeatSequence(target, x, y);
     invokeInlineAction(target);
 
-    if ((target as any).click) {
-      try {
-        (target as any).click();
-      } catch {
-        // ignore click errors on nodes
+    const href = target.getAttribute("href");
+    const isJavascriptUrl = href && href.trim().toLowerCase().startsWith("javascript:");
+    if (isJavascriptUrl) {
+      target.removeAttribute("href");
+    }
+
+    try {
+      if ((target as any).click) {
+        try {
+          (target as any).click();
+        } catch {
+          // ignore click errors on nodes
+        }
+      } else {
+        target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y }));
       }
-    } else {
-      target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y }));
+    } finally {
+      if (isJavascriptUrl) {
+        target.setAttribute("href", href);
+      }
     }
   }
 

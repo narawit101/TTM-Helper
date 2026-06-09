@@ -31,32 +31,7 @@ async function clearStoredRun() {
   await chrome.storage.local.remove(ACTIVE_RUN_KEY);
 }
 
-function injectPageAlertBridge() {
-  if (document.documentElement.dataset.ttmHelperAlertBridge === "true") {
-    return;
-  }
 
-  const script = document.createElement("script");
-  script.textContent = `
-    (() => {
-      if (window.__ttmHelperAlertBridgeInstalled) return;
-      window.__ttmHelperAlertBridgeInstalled = true;
-      const originalAlert = window.alert.bind(window);
-      window.alert = function(message) {
-        try {
-          window.dispatchEvent(new CustomEvent("${PAGE_ALERT_EVENT}", {
-            detail: String(message ?? "")
-          }));
-        } catch {}
-        return originalAlert(message);
-      };
-    })();
-  `;
-
-  (document.head ?? document.documentElement).appendChild(script);
-  script.remove();
-  document.documentElement.dataset.ttmHelperAlertBridge = "true";
-}
 
 async function stopRunLocally() {
   clearLoop();
@@ -207,7 +182,6 @@ async function executeRunCycle(reason: string) {
 }
 
 async function bootstrapFromStorage() {
-  injectPageAlertBridge();
   installPageAlertListener();
 
   const storedRun = await getStoredRun();
@@ -242,7 +216,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   if (message?.type === "RUN_PRESET") {
     void (async () => {
-      injectPageAlertBridge();
       installPageAlertListener();
 
       resetTtmSession();

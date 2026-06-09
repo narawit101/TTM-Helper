@@ -33,6 +33,12 @@ export const manifest = defineManifest({
       matches: ["https://booking.thaiticketmajor.com/*"],
       js: ["src/content/index.ts"],
       run_at: "document_idle"
+    },
+    {
+      matches: ["https://booking.thaiticketmajor.com/*"],
+      js: ["src/content/inject.ts"],
+      run_at: "document_start",
+      world: "MAIN"
     }
   ]
 });
