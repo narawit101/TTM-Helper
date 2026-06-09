@@ -7,6 +7,17 @@ This project is split into two main apps:
 - `apps/admin` — a Next.js full-stack admin dashboard with API routes, Prisma, PostgreSQL, Redis, and validation
 - `apps/extension` — a Manifest V3 Chrome extension that helps users prepare and run a guided booking flow on ThaiTicketMajor
 
+---
+
+## 📖 Project Documentation & Guidelines
+
+To help developers and AI agents understand the codebase, the following documentation is available:
+
+- 📄 **[CONTEXT.md](file:///c:/D/bot/CONTEXT.md)**: Explains the detailed English system context, backend design, pnpm monorepo structure, and the **E2E Automation Engine State Machine** (including state diagrams, WAF evasion rules, and delays).
+- 🤖 **[AGENT.md](file:///c:/D/bot/AGENT.md)**: Contains guidelines, coding standards, commands playbook, and instructions specifically written for developer/agent guidance on this codebase.
+
+---
+
 ## Project Summary
 
 Ticket Helper Platform was built to solve two related problems:
@@ -85,7 +96,9 @@ bot/
 │  └─ extension/   # Chrome extension (MV3)
 ├─ packages/
 │  └─ shared/      # shared contracts, constants, and types
-└─ README.md
+├─ README.md
+├─ CONTEXT.md      # Detailed context & state machine (English)
+└─ AGENT.md        # AI Agent playbooks and guidelines
 ```
 
 ### `apps/admin`
@@ -119,6 +132,8 @@ At a high level, the extension flow is:
 4. Extension opens the booking page and monitors the current page state
 5. Extension applies the next allowed action for the detected state
 6. If the account expires or becomes unavailable, the extension stops the run and clears the session
+
+For a detailed breakdown of states (e.g., `zones`, `seats`, `details`, `payment`, `queue`), please refer to **[CONTEXT.md](file:///c:/D/bot/CONTEXT.md)**.
 
 ## Data Model
 
