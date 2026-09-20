@@ -1,27 +1,33 @@
 {
-  "name": "ticket-helper-platform",
-  "private": true,
+  "name": "ticket-helper-extension",
   "version": "0.1.0",
-  "packageManager": "pnpm@10.0.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "pnpm --parallel --filter admin --filter extension dev",
-    "build": "pnpm --filter admin build && pnpm --filter extension build",
-    "lint": "pnpm --filter admin lint && pnpm --filter extension lint",
-    "typecheck": "pnpm --filter admin typecheck && pnpm --filter extension typecheck",
-    "env:local": "pnpm --filter admin env:local",
-    "env:prod": "pnpm --filter admin env:prod",
-    "prisma:generate": "pnpm --filter admin prisma:generate",
-    "prisma:migrate": "pnpm --filter admin prisma:migrate",
-    "prisma:migrate:deploy": "pnpm --filter admin prisma:migrate:deploy",
-    "prisma:seed": "pnpm --filter admin prisma:seed"
+    "dev": "vite",
+    "dev:build": "vite build --watch",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/client",
-      "@prisma/engines",
-      "esbuild",
-      "prisma",
-      "sharp"
-    ]
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "lucide-react": "^1.7.0",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-hook-form": "^7.72.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.27",
+    "@types/chrome": "^0.0.322",
+    "@types/node": "^22.13.14",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.1"
   }
 }
